@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const User = require('./models/User');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const Vehicle = require('./models/vehicle');
 
