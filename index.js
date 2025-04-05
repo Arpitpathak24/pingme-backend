@@ -4,7 +4,6 @@ const app = express();
 const path = require('path');
 const nodemailer = require('nodemailer');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
 const User = require('./models/User');
 const bcrypt = require('bcryptjs');
@@ -24,12 +23,7 @@ app.use(express.json()); // To handle JSON bodies
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI, // Use your MongoDB URI here
-        collectionName: 'sessions', // Optional, default is 'sessions'
-        ttl: 14 * 24 * 60 * 60 // Session expiration time (2 weeks)
-    })
+    saveUninitialized: true
 }));
 
 // CORS
@@ -67,11 +61,10 @@ app.post('/signup', async (req, res) => {
 
         res.status(201).json({ message: 'Signup successful' });
     } catch (error) {
-        console.error('Signup error:', error); // Add more specific error logging
-        res.status(500).json({ message: 'Signup failed', error: error.message }); // Include error details in the response
+        console.error('Signup error:', error);
+        res.status(500).json({ message: 'Signup failed' });
     }
 });
-
 
 // Login
 app.post('/login', async (req, res) => {
@@ -87,15 +80,15 @@ app.post('/login', async (req, res) => {
         req.session.user = user;
         res.status(200).json({ message: 'Login successful', user });
     } catch (error) {
-        console.error('Login error:', error.message); // Enhanced logging
-        res.status(500).json({ message: 'Login failed', error: error.message });
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Login failed' });
     }
 });
 
 // Logout
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
-        if (err) return res.status(500).json({ message: 'Logout failed', error: err.message });
+        if (err) return res.status(500).json({ message: 'Logout failed' });
         res.status(200).json({ message: 'Logged out successfully' });
     });
 });
@@ -108,13 +101,13 @@ app.post('/forgot-password', async (req, res) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.GMAIL_USER, // Now using environment variable
-            pass: process.env.GMAIL_PASS  // Using environment variable for password
+            user: 'arpitpathak2408@gmail.com',
+            pass: 'ypyn jcxm hxfh qysm'
         }
     });
 
     const mailOptions = {
-        from: process.env.GMAIL_USER,
+        from: 'arpitpathak2408@gmail.com',
         to: email,
         subject: 'Password Reset Request',
         html: `<h1>Password Reset</h1><p>Click the link below to reset your password:</p><a href="https://pingme-frontend.vercel.app/reset-password?token=${resetToken}">Reset Password</a>`
@@ -124,8 +117,8 @@ app.post('/forgot-password', async (req, res) => {
         await transporter.sendMail(mailOptions);
         res.status(200).json({ message: 'Reset link sent' });
     } catch (error) {
-        console.error('Email error:', error.message);
-        res.status(500).json({ message: 'Failed to send email', error: error.message });
+        console.error('Email error:', error);
+        res.status(500).json({ message: 'Failed to send email' });
     }
 });
 
@@ -156,8 +149,8 @@ app.post('/vehicle-details', isAuthenticated, upload.single('documents'), async 
         await newVehicle.save();
         res.status(201).json({ message: 'Vehicle saved' });
     } catch (error) {
-        console.error('Vehicle save error:', error.message);
-        res.status(500).json({ message: 'Failed to save vehicle', error: error.message });
+        console.error('Vehicle save error:', error);
+        res.status(500).json({ message: 'Failed to save vehicle' });
     }
 });
 
@@ -169,8 +162,8 @@ app.post('/process-payment', isAuthenticated, async (req, res) => {
         if (isSuccess) return res.status(200).json({ message: 'Payment successful' });
         res.status(400).json({ message: 'Payment failed' });
     } catch (error) {
-        console.error('Payment error:', error.message);
-        res.status(500).json({ message: 'Payment failed', error: error.message });
+        console.error('Payment error:', error);
+        res.status(500).json({ message: 'Payment failed' });
     }
 });
 
@@ -179,8 +172,8 @@ app.get('/download-sticker', isAuthenticated, (req, res) => {
     const filePath = path.join(__dirname, 'stickers', 'sticker.png');
     res.download(filePath, 'sticker.png', (err) => {
         if (err) {
-            console.error('Sticker download error:', err.message);
-            res.status(500).json({ message: 'Download failed', error: err.message });
+            console.error('Sticker download error:', err);
+            res.status(500).json({ message: 'Download failed' });
         }
     });
 });
