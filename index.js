@@ -23,7 +23,11 @@ app.use(express.json()); // To handle JSON bodies
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // Ensure cookie is only sent over HTTPS in production
+    }
 }));
 
 // CORS
@@ -61,8 +65,8 @@ app.post('/signup', async (req, res) => {
 
         res.status(201).json({ message: 'Signup successful' });
     } catch (error) {
-        console.error('Signup error:', error);
-        res.status(500).json({ message: 'Signup failed' });
+        console.error('Signup error:', error.message); // Enhanced logging
+        res.status(500).json({ message: 'Signup failed', error: error.message });
     }
 });
 
@@ -80,15 +84,15 @@ app.post('/login', async (req, res) => {
         req.session.user = user;
         res.status(200).json({ message: 'Login successful', user });
     } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: 'Login failed' });
+        console.error('Login error:', error.message); // Enhanced logging
+        res.status(500).json({ message: 'Login failed', error: error.message });
     }
 });
 
 // Logout
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
-        if (err) return res.status(500).json({ message: 'Logout failed' });
+        if (err) return res.status(500).json({ message: 'Logout failed', error: err.message });
         res.status(200).json({ message: 'Logged out successfully' });
     });
 });
@@ -101,13 +105,13 @@ app.post('/forgot-password', async (req, res) => {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: 'arpitpathak2408@gmail.com',
-            pass: 'ypyn jcxm hxfh qysm'
+            user: process.env.GMAIL_USER, // Now using environment variable
+            pass: process.env.GMAIL_PASS  // Using environment variable for password
         }
     });
 
     const mailOptions = {
-        from: 'arpitpathak2408@gmail.com',
+        from: process.env.GMAIL_USER,
         to: email,
         subject: 'Password Reset Request',
         html: `<h1>Password Reset</h1><p>Click the link below to reset your password:</p><a href="https://pingme-frontend.vercel.app/reset-password?token=${resetToken}">Reset Password</a>`
@@ -117,8 +121,8 @@ app.post('/forgot-password', async (req, res) => {
         await transporter.sendMail(mailOptions);
         res.status(200).json({ message: 'Reset link sent' });
     } catch (error) {
-        console.error('Email error:', error);
-        res.status(500).json({ message: 'Failed to send email' });
+        console.error('Email error:', error.message);
+        res.status(500).json({ message: 'Failed to send email', error: error.message });
     }
 });
 
@@ -149,8 +153,8 @@ app.post('/vehicle-details', isAuthenticated, upload.single('documents'), async 
         await newVehicle.save();
         res.status(201).json({ message: 'Vehicle saved' });
     } catch (error) {
-        console.error('Vehicle save error:', error);
-        res.status(500).json({ message: 'Failed to save vehicle' });
+        console.error('Vehicle save error:', error.message);
+        res.status(500).json({ message: 'Failed to save vehicle', error: error.message });
     }
 });
 
@@ -162,8 +166,8 @@ app.post('/process-payment', isAuthenticated, async (req, res) => {
         if (isSuccess) return res.status(200).json({ message: 'Payment successful' });
         res.status(400).json({ message: 'Payment failed' });
     } catch (error) {
-        console.error('Payment error:', error);
-        res.status(500).json({ message: 'Payment failed' });
+        console.error('Payment error:', error.message);
+        res.status(500).json({ message: 'Payment failed', error: error.message });
     }
 });
 
@@ -172,8 +176,8 @@ app.get('/download-sticker', isAuthenticated, (req, res) => {
     const filePath = path.join(__dirname, 'stickers', 'sticker.png');
     res.download(filePath, 'sticker.png', (err) => {
         if (err) {
-            console.error('Sticker download error:', err);
-            res.status(500).json({ message: 'Download failed' });
+            console.error('Sticker download error:', err.message);
+            res.status(500).json({ message: 'Download failed', error: err.message });
         }
     });
 });
