@@ -4,6 +4,7 @@ const app = express();
 const path = require('path');
 const nodemailer = require('nodemailer');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const mongoose = require('mongoose');
 const User = require('./models/User');
 const bcrypt = require('bcryptjs');
@@ -24,10 +25,11 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // Ensure cookie is only sent over HTTPS in production
-    }
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI, // Use your MongoDB URI here
+        collectionName: 'sessions', // Optional, default is 'sessions'
+        ttl: 14 * 24 * 60 * 60 // Session expiration time (2 weeks)
+    })
 }));
 
 // CORS
@@ -65,10 +67,11 @@ app.post('/signup', async (req, res) => {
 
         res.status(201).json({ message: 'Signup successful' });
     } catch (error) {
-        console.error('Signup error:', error.message); // Enhanced logging
-        res.status(500).json({ message: 'Signup failed', error: error.message });
+        console.error('Signup error:', error); // Add more specific error logging
+        res.status(500).json({ message: 'Signup failed', error: error.message }); // Include error details in the response
     }
 });
+
 
 // Login
 app.post('/login', async (req, res) => {
