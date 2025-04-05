@@ -9,17 +9,16 @@ const User = require('./models/User');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const Vehicle = require('./models/vehicle');
-
+const cors = require('cors');
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => {
-    console.log('Connected to MongoDB Atlas');
-}).catch((err) => {
-    console.error('Error connecting to MongoDB Atlas:', err);
-});
+mongoose.connect(process.env.MONGO_URI)
+    .then(() => {
+        console.log('Connected to MongoDB Atlas');
+    })
+    .catch((err) => {
+        console.error('Error connecting to MongoDB Atlas:', err);
+    });
 
 // Middleware to parse form data
 app.use(express.urlencoded({ extended: true }));
@@ -30,6 +29,20 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
+
+// Configure CORS middleware
+app.use(cors({
+    origin: 'https://your-frontend-url.com', // Replace with your frontend URL
+    credentials: true
+}));
+
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Set EJS as the view engine
+app.set('view engine', 'ejs');
+
+// Set the directory where your EJS templates are located
+app.set('views', path.join(__dirname, '../frontend'));
 
 // Middleware to pass user info to all templates
 app.use((req, res, next) => {
@@ -46,10 +59,6 @@ function isAuthenticated(req, res, next) {
     }
 }
 
-// Set EJS as the template engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '../frontend'));
-
 // Route to render the home page
 app.get('/', (req, res) => {
     const user = req.session.isLoggedIn ? req.session.user : null; // Check if the user is logged in
@@ -58,7 +67,7 @@ app.get('/', (req, res) => {
 
 // Route to render the sign-up page
 app.get('/signup', (req, res) => {
-    res.render('signup');
+    res.render('signup'); // Render the signup.ejs file
 });
 
 // Route to handle sign-up form submission
