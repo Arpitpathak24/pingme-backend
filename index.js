@@ -32,7 +32,7 @@ app.use(session({
 
 // Configure CORS middleware
 app.use(cors({
-    origin: 'https://your-frontend-url.com', // Replace with your frontend URL
+    origin: 'https://pingme-frontend.vercel.app', // Replace with your frontend URL
     credentials: true
 }));
 
@@ -299,3 +299,4 @@ const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
